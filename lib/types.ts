@@ -6,6 +6,7 @@ export interface Terminal {
   id: string
   code: TerminalCode
   name: string
+  airportCode?: string
 }
 
 export interface Airline {

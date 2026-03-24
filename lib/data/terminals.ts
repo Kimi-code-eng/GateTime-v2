@@ -1,10 +1,10 @@
 import type { Terminal } from '../types'
 
 export const TERMINALS: Terminal[] = [
-  { id: 'term-a', code: 'A', name: 'Terminal A' },
-  { id: 'term-b', code: 'B', name: 'Terminal B' },
-  { id: 'term-c', code: 'C', name: 'Terminal C' },
-  { id: 'term-e', code: 'E', name: 'Terminal E' },
+  { id: 'term-a', code: 'A', name: 'Terminal A', airportCode: 'BOS' },
+  { id: 'term-b', code: 'B', name: 'Terminal B', airportCode: 'BOS' },
+  { id: 'term-c', code: 'C', name: 'Terminal C', airportCode: 'BOS' },
+  { id: 'term-e', code: 'E', name: 'Terminal E', airportCode: 'BOS' },
 ]
 
 export function getTerminal(code: string) {

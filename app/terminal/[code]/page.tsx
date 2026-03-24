@@ -9,6 +9,7 @@ import { calculateLeaveBy } from '../../../lib/calculator'
 import { format } from 'date-fns'
 import { getTerminalEstimate } from '../../../lib/estimates'
 import { getRecentReports, ensureSeeded, getReporter } from '../../../lib/storage'
+import { fetchTsaWait } from '../../../lib/tsaApi'
 import { PEAK_TIPS } from '../../../lib/data/seedEstimates'
 import SegmentBar from '../../../components/SegmentBar'
 import ConfidenceBadge from '../../../components/ConfidenceBadge'
@@ -25,6 +26,7 @@ export default function TerminalPage() {
   const [estimate, setEstimate] = useState<TerminalEstimate | null>(null)
   const [reports, setReports]   = useState<UserReport[]>([])
   const [includeLounge, setIncludeLounge] = useState(false)
+  const [apiSecurityMinutes, setApiSecurityMinutes] = useState<number | undefined>(undefined)
   const reporter = typeof window !== 'undefined' ? getReporter() : null
 
   // Inline departure calculator state
@@ -35,18 +37,32 @@ export default function TerminalPage() {
   const [calcGate, setCalcGate] = useState('')
   const [calcResult, setCalcResult] = useState<ReturnType<typeof calculateLeaveBy>>(null)
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback((latestApiMinutes?: number) => {
     if (!terminal) return
-    setEstimate(getTerminalEstimate(terminal.id, undefined, includeLounge))
+    setEstimate(getTerminalEstimate(terminal.id, undefined, includeLounge, undefined, latestApiMinutes))
     setReports(getRecentReports(terminal.id, undefined, 2))
   }, [terminal, includeLounge])
 
   useEffect(() => {
     ensureSeeded()
-    refresh()
-    const id = setInterval(refresh, 30_000)
+
+    // Fetch real-time TSA data then refresh estimates
+    fetchTsaWait(terminal.airportCode ?? 'BOS').then(data => {
+      const mins = data?.airportAvgMinutes ?? undefined
+      setApiSecurityMinutes(mins)
+      refresh(mins)
+    })
+
+    refresh(apiSecurityMinutes)
+    const id = setInterval(() => {
+      fetchTsaWait(terminal.airportCode ?? 'BOS').then(data => {
+        const mins = data?.airportAvgMinutes ?? undefined
+        setApiSecurityMinutes(mins)
+        refresh(mins)
+      })
+    }, 60_000) // refresh TSA data every 60 s
     return () => clearInterval(id)
-  }, [refresh])
+  }, [refresh]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!terminal) {
     return (
