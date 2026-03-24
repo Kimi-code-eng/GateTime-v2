@@ -2,5 +2,11 @@ node_modules/
 .next/
 .claude/
 *.log
+
+# Secrets — never commit these
+.env
 .env.local
 .env*.local
+scripts/.env
+scripts/credentials.json
+scripts/token.json
