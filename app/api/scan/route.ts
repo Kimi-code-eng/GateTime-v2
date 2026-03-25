@@ -23,7 +23,7 @@ export async function POST() {
     ANTHROPIC_API_KEY: anthropicKey,
   }
 
-  return new Promise((resolve) => {
+  return new Promise<Response>((resolve) => {
     exec(
       `py "${scriptPath}"`,
       { cwd: scriptsDir, env, timeout: 120000 },
