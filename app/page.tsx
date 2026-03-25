@@ -12,6 +12,7 @@ import { getTerminalEstimate } from '../lib/estimates'
 import { ensureSeeded } from '../lib/storage'
 import { getAirlinesForTerminal } from '../lib/data/airlines'
 import { TERMINALS } from '../lib/data/terminals'
+import { fetchTsaWait } from '../lib/tsaApi'
 import Link from 'next/link'
 
 const TERMINAL_COLORS: Record<string, string> = {
@@ -38,10 +39,12 @@ function TerminalCard({
   useEffect(() => {
     ensureSeeded()
     const terminal = TERMINALS.find(t => t.code === terminalCode)
-    if (terminal) {
-      const est = getTerminalEstimate(terminal.id)
+    if (!terminal) return
+    fetchTsaWait(terminal.airportCode ?? 'BOS').then(data => {
+      const apiMins = data?.airportAvgMinutes
+      const est = getTerminalEstimate(terminal.id, undefined, false, undefined, apiMins)
       setWaitMinutes(est.totalMinutes)
-    }
+    })
   }, [terminalCode])
 
   const getStatusColor = (mins: number | null) => {
