@@ -34,9 +34,9 @@ if sys.platform == "win32":
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 
-# Load both .env files
-load_dotenv(os.path.join(SCRIPT_DIR, '.env'))
-load_dotenv(os.path.join(PROJECT_DIR, '.env'))
+# Load both .env files (override=True so they take precedence over parent process env)
+load_dotenv(os.path.join(SCRIPT_DIR, '.env'), override=True)
+load_dotenv(os.path.join(PROJECT_DIR, '.env'), override=True)
 
 # Gmail + Calendar + Send scopes
 SCOPES = [
