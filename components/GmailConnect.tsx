@@ -7,6 +7,7 @@ export default function GmailConnect() {
   const [address, setAddress] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+  const [savedEmail, setSavedEmail] = useState('')
 
   const submit = async () => {
     if (!email.trim() || !address.trim()) {
@@ -24,7 +25,7 @@ export default function GmailConnect() {
     const user = { email: email.trim(), homeAddress: address.trim(), registeredAt: new Date().toISOString() }
     localStorage.setItem('gt_flight_user', JSON.stringify(user))
 
-    // Also try the API (works on local dev, may fail on Vercel)
+    // Try the API (saves to users.json on local dev, sends welcome email)
     try {
       await fetch('/api/users', {
         method: 'POST',
@@ -36,6 +37,7 @@ export default function GmailConnect() {
     }
 
     setStatus('success')
+    setSavedEmail(email.trim())
   }
 
   if (status === 'success') {
@@ -47,10 +49,24 @@ export default function GmailConnect() {
         <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'Poppins, sans-serif' }}>
           You&apos;re signed up!
         </h3>
-        <p className="text-white/60 text-sm max-w-md mx-auto">
-          We&apos;ll scan your inbox for flight confirmations and email you a personalized reminder
-          with your leave-home time and airport arrival time before each flight.
+        <p className="text-white/60 text-sm max-w-md mx-auto mb-4">
+          We&apos;ll scan <span className="text-white font-medium">{savedEmail}</span> for flight confirmations
+          and send you personalized reminders before each flight.
         </p>
+        <div className="bg-white/5 rounded-xl p-4 max-w-sm mx-auto text-left space-y-2">
+          <div className="flex items-start gap-2">
+            <Mail size={14} className="text-[#34D399] mt-0.5 flex-shrink-0" />
+            <p className="text-white/50 text-xs">A welcome email will be sent to confirm your registration</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <Plane size={14} className="text-[#34D399] mt-0.5 flex-shrink-0" />
+            <p className="text-white/50 text-xs">Forward flight confirmations to {savedEmail} if using a different email for bookings</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <MapPin size={14} className="text-[#34D399] mt-0.5 flex-shrink-0" />
+            <p className="text-white/50 text-xs">Reminders include your personalized leave-home time with drive time</p>
+          </div>
+        </div>
       </div>
     )
   }

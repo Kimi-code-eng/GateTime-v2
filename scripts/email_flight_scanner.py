@@ -70,8 +70,19 @@ def save_json(path, data):
         json.dump(data, f, indent=2, ensure_ascii=False, default=str)
 
 
+WELCOMED_FILE = os.path.join(SCRIPT_DIR, "welcomed.json")
+
+
 def load_users():
     return load_json(USERS_FILE, [])
+
+
+def load_welcomed():
+    return set(load_json(WELCOMED_FILE, []))
+
+
+def save_welcomed(welcomed):
+    save_json(WELCOMED_FILE, list(welcomed))
 
 
 def load_flights():
@@ -701,6 +712,55 @@ def build_urgent_email(flight, trip, calc, drive_info, leave_home_dt, dep_dt):
 </body></html>"""
 
 
+def build_welcome_email(user_email: str, home_address: str):
+    """Build HTML for the welcome/registration confirmation email."""
+    return f"""<html><body style="font-family: 'Inter', Arial, sans-serif; background: #F5F6F8; padding: 20px;">
+<div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+
+  <!-- Header -->
+  <div style="background: #0A0F1E; padding: 32px 28px; text-align: center;">
+    <div style="color: #C5A255; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px;">Welcome to GateTime</div>
+    <div style="color: white; font-size: 32px; font-weight: 700; font-family: 'Poppins', Arial, sans-serif; line-height: 1.2;">You're all set!</div>
+    <div style="color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 8px;">Flight reminders are now active</div>
+  </div>
+
+  <!-- Details -->
+  <div style="padding: 28px;">
+    <div style="font-size: 14px; color: #1A1A2E; margin-bottom: 20px; line-height: 1.6;">
+      Hi! Your GateTime account is set up. Here's what happens next:
+    </div>
+
+    <div style="background: #F9FAFB; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Your Settings</div>
+      <div style="font-size: 14px; color: #1A1A2E; margin-bottom: 8px;"><strong>Email:</strong> {user_email}</div>
+      <div style="font-size: 14px; color: #1A1A2E;"><strong>Home:</strong> {home_address}</div>
+    </div>
+
+    <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">How It Works</div>
+
+    <div style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+      <div style="width: 24px; height: 24px; border-radius: 50%; background: #34D399; color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px;">1</div>
+      <div style="font-size: 13px; color: #1A1A2E;">We scan your inbox for flight confirmation emails from any airline</div>
+    </div>
+    <div style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+      <div style="width: 24px; height: 24px; border-radius: 50%; background: #34D399; color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px;">2</div>
+      <div style="font-size: 13px; color: #1A1A2E;">1 day before your flight, we email you with your personalized leave-home time</div>
+    </div>
+    <div style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+      <div style="width: 24px; height: 24px; border-radius: 50%; background: #34D399; color: white; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 12px;">3</div>
+      <div style="font-size: 13px; color: #1A1A2E;">5 hours before, we send an urgent reminder with live traffic data and an Uber button</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="padding: 16px 28px; background: #F9FAFB; border-top: 1px solid #F0F0F0; text-align: center;">
+    <div style="font-size: 11px; color: #9CA3AF;">Visit <a href="https://gate-time-v2.vercel.app" style="color: #34D399; text-decoration: none;">GateTime</a> to check live wait times at Logan</div>
+  </div>
+
+</div>
+</body></html>"""
+
+
 def send_html_email(gmail_service, to_email: str, subject: str, html: str):
     """Send an HTML email via Gmail API."""
     message = MIMEText(html, "html")
@@ -738,6 +798,19 @@ def main():
         print(f"Home address: {home_address}")
     else:
         print("No home address registered (drive time will be estimated)")
+
+    # ── Send welcome emails to new users ─────────────────────────────────
+    welcomed = load_welcomed()
+    for u in users:
+        if u["email"].lower() not in welcomed:
+            print(f"\n  Sending welcome email to {u['email']}...")
+            try:
+                html = build_welcome_email(u["email"], u.get("homeAddress", "Not set"))
+                send_html_email(gmail, u["email"], "Welcome to GateTime! Flight reminders are active", html)
+                welcomed.add(u["email"].lower())
+            except Exception as e:
+                print(f"     Welcome email error: {e}")
+    save_welcomed(welcomed)
 
     # Load tracked flights
     tracked_flights = load_flights()
