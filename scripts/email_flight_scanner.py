@@ -582,15 +582,109 @@ def build_urgent_email(flight, trip, calc, drive_info, leave_home_dt, dep_dt):
     </div>
   </div>
 
-  <!-- Quick info -->
-  <div style="padding: 24px 28px; text-align: center;">
+  <!-- Flight info -->
+  <div style="padding: 24px 28px; border-bottom: 1px solid #F0F0F0;">
     <div style="font-size: 14px; color: #1A1A2E; margin-bottom: 4px;">Flight departs at <strong>{dep_dt.strftime('%I:%M %p')}</strong></div>
     <div style="font-size: 13px; color: #6B7280;">Confirmation: <strong>{trip.get('confirmation_code', 'N/A')}</strong></div>
   </div>
 
+  <!-- Timeline breakdown -->
+  <div style="padding: 24px 28px;">
+    <div style="font-size: 11px; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Your Timeline</div>
+
+    <!-- Leave home -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 14px; height: 14px; border-radius: 50%; background: #F59E0B; border: 3px solid #FEF3C7;"></div>
+        <div style="width: 1px; height: 28px; background: #E5E7EB;"></div>
+      </div>
+      <div style="margin-left: 12px; padding-bottom: 12px;">
+        <div style="font-size: 15px; font-weight: 700; color: #1A1A2E;">{leave_home_dt.strftime('%I:%M %p')} - Leave home</div>
+      </div>
+    </div>
+
+    <!-- Drive -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: #8B5CF6; margin-top: 2px;"></div>
+        <div style="width: 1px; height: 28px; background: #E5E7EB;"></div>
+      </div>
+      <div style="margin-left: 12px; padding-bottom: 12px;">
+        <div style="font-size: 14px; color: #1A1A2E;"><strong>{drive_mins} min</strong> - Drive to BOS</div>
+      </div>
+    </div>
+
+    <!-- Arrive at airport -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 12px; height: 12px; border-radius: 50%; background: #34D399; margin-top: 1px;"></div>
+        <div style="width: 1px; height: 28px; background: #E5E7EB;"></div>
+      </div>
+      <div style="margin-left: 12px; padding-bottom: 12px;">
+        <div style="font-size: 15px; font-weight: 700; color: #1A1A2E;">{arrive_by.strftime('%I:%M %p')} - Arrive at airport</div>
+        <div style="font-size: 12px; color: #6B7280;">Terminal {calc['terminal']} entrance</div>
+      </div>
+    </div>
+
+    <!-- Check-in -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: #3B82F6; margin-top: 2px;"></div>
+        <div style="width: 1px; height: 28px; background: #E5E7EB;"></div>
+      </div>
+      <div style="margin-left: 12px; padding-bottom: 12px;">
+        <div style="font-size: 14px; color: #1A1A2E;"><strong>{calc['check_in']} min</strong> - Check-in</div>
+      </div>
+    </div>
+
+    <!-- Security -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: #F59E0B; margin-top: 2px;"></div>
+        <div style="width: 1px; height: 28px; background: #E5E7EB;"></div>
+      </div>
+      <div style="margin-left: 12px; padding-bottom: 12px;">
+        <div style="font-size: 14px; color: #1A1A2E;"><strong>{calc['security']} min</strong> - Security</div>
+      </div>
+    </div>
+
+    <!-- Walk -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: #6B7280; margin-top: 2px;"></div>
+        <div style="width: 1px; height: 28px; background: #E5E7EB;"></div>
+      </div>
+      <div style="margin-left: 12px; padding-bottom: 12px;">
+        <div style="font-size: 14px; color: #1A1A2E;"><strong>{calc['walk_time']} min</strong> - Walk to gate</div>
+      </div>
+    </div>
+
+    <!-- Boarding -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 10px; height: 10px; border-radius: 50%; background: #34D399; margin-top: 2px;"></div>
+        <div style="width: 1px; height: 28px; background: #E5E7EB;"></div>
+      </div>
+      <div style="margin-left: 12px; padding-bottom: 12px;">
+        <div style="font-size: 14px; color: #1A1A2E;"><strong>{calc['boarding_buffer']} min</strong> - Boarding</div>
+      </div>
+    </div>
+
+    <!-- Departure -->
+    <div style="display: flex; align-items: flex-start;">
+      <div style="width: 24px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0;">
+        <div style="width: 14px; height: 14px; border-radius: 50%; background: #0A0F1E; border: 3px solid #D1D5DB;"></div>
+      </div>
+      <div style="margin-left: 12px;">
+        <div style="font-size: 15px; font-weight: 700; color: #1A1A2E;">{dep_dt.strftime('%I:%M %p')} - Flight departs</div>
+        <div style="font-size: 12px; color: #6B7280;">{flight['flight_number']} to {flight['destination']}</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Schedule Uber -->
   <div style="padding: 0 28px 24px; text-align: center;">
-    <a href="https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=42.3656&dropoff[longitude]=-71.0096&dropoff[nickname]=Boston%20Logan%20Airport%20(BOS)&dropoff[formatted_address]=1%20Harborside%20Dr%2C%20Boston%2C%20MA%2002128"
+    <a href="https://m.uber.com/ul/?client_id=gatetime&action=setPickup&pickup=my_location&dropoff%5Bformatted_address%5D=Boston+Logan+International+Airport%2C+1+Harborside+Dr%2C+Boston%2C+MA+02128&dropoff%5Blatitude%5D=42.3656&dropoff%5Blongitude%5D=-71.0096"
        style="display: inline-block; background: #000000; color: white; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-family: 'Poppins', Arial, sans-serif;">
        Schedule an Uber to BOS
     </a>
