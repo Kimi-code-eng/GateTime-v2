@@ -8,6 +8,7 @@ import Footer from '../components/Footer'
 import DepartureCalculator from '../components/DepartureCalculator'
 import LeaderboardPreview from '../components/LeaderboardPreview'
 import GmailConnect from '../components/GmailConnect'
+import ScanButton from '../components/ScanButton'
 import { getTerminalEstimate } from '../lib/estimates'
 import { ensureSeeded } from '../lib/storage'
 import { getAirlinesForTerminal } from '../lib/data/airlines'
@@ -170,8 +171,11 @@ export default function Home() {
 
       {/* Flight Reminders CTA */}
       <section className="bg-white py-16">
-        <div className="max-w-[1200px] mx-auto px-6 lg:px-10">
+        <div className="max-w-[1200px] mx-auto px-6 lg:px-10 space-y-8">
           <GmailConnect />
+          <div className="max-w-md mx-auto">
+            <ScanButton />
+          </div>
         </div>
       </section>
 
