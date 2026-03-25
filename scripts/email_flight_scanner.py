@@ -103,8 +103,9 @@ def get_google_credentials() -> Credentials:
 
 def search_flight_emails(gmail_service, max_results: int = 10) -> list:
     query = (
-        "subject:(flight OR booking OR confirmation OR itinerary OR e-ticket OR reservation) "
-        "newer_than:30d"
+        "subject:(flight OR booking OR confirmation OR itinerary OR e-ticket OR reservation OR receipt OR trip OR purchased "
+        "OR delta OR latam OR jetblue OR united OR american) "
+        "newer_than:60d"
     )
     result = gmail_service.users().messages().list(
         userId="me", q=query, maxResults=max_results
@@ -198,21 +199,45 @@ If this is not a flight confirmation email, return {{"is_flight_confirmation": f
 If a field is unknown, use null."""
 
     response = client.messages.create(
-        model="claude-opus-4-6",
-        max_tokens=1024,
-        thinking={"type": "adaptive"},
+        model="claude-sonnet-4-20250514",
+        max_tokens=2048,
         messages=[{"role": "user", "content": prompt}],
     )
 
-    raw = response.content[-1].text.strip()
+    # Find the text block (skip thinking blocks)
+    raw = ""
+    for block in response.content:
+        if hasattr(block, "text"):
+            raw = block.text.strip()
+            break
+    if not raw:
+        print("  [WARN] No text in Claude response")
+        return None
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
+        # Try stripping markdown code fences
         if "```" in raw:
             raw = raw.split("```")[1]
             if raw.startswith("json"):
                 raw = raw[4:]
-        data = json.loads(raw.strip())
+            raw = raw.strip()
+        # Try to find JSON object in the text
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            # Last resort: find first { and last }
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start >= 0 and end > start:
+                try:
+                    data = json.loads(raw[start:end])
+                except json.JSONDecodeError:
+                    print(f"  [WARN] Could not parse Claude response")
+                    return None
+            else:
+                print(f"  [WARN] No JSON found in Claude response")
+                return None
 
     if not data.get("is_flight_confirmation"):
         return None
@@ -563,6 +588,15 @@ def build_urgent_email(flight, trip, calc, drive_info, leave_home_dt, dep_dt):
     <div style="font-size: 13px; color: #6B7280;">Confirmation: <strong>{trip.get('confirmation_code', 'N/A')}</strong></div>
   </div>
 
+  <!-- Schedule Uber -->
+  <div style="padding: 0 28px 24px; text-align: center;">
+    <a href="https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=42.3656&dropoff[longitude]=-71.0096&dropoff[nickname]=Boston%20Logan%20Airport%20(BOS)&dropoff[formatted_address]=1%20Harborside%20Dr%2C%20Boston%2C%20MA%2002128"
+       style="display: inline-block; background: #000000; color: white; font-weight: 700; font-size: 15px; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-family: 'Poppins', Arial, sans-serif;">
+       Schedule an Uber to BOS
+    </a>
+    <div style="font-size: 11px; color: #9CA3AF; margin-top: 8px;">Opens the Uber app with Logan Airport as destination</div>
+  </div>
+
   <!-- Footer -->
   <div style="padding: 16px 28px; background: #F9FAFB; border-top: 1px solid #F0F0F0; text-align: center;">
     <div style="font-size: 11px; color: #9CA3AF;">Drive time based on current traffic conditions</div>
@@ -651,6 +685,9 @@ def main():
                     print(f"     Calendar event error: {e}")
 
                 # Calculate arrive-by
+                if not flight.get("departure_datetime"):
+                    print(f"     Skipping - no departure time found")
+                    continue
                 dep_dt = datetime.fromisoformat(flight["departure_datetime"])
                 calc = calculate_arrive_by(dep_dt, trip.get("airline", ""))
 
